@@ -1,5 +1,6 @@
 import { saveImage, getAllImages, deleteImage, updateImage } from './storage.js';
 
+let activeCanvasItem = null;
 let undoStack = [];
 let currentPasteBatch = [];
 let pasteTimeout = null;
@@ -39,6 +40,33 @@ export async function initCanvas() {
     window.addEventListener('pointercancel', onPointerUp);
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('paste', handlePaste);
+    
+    // Global Drag & Drop for Canvas
+    window.addEventListener('dragover', (e) => {
+      if (document.getElementById('canvas-view')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    });
+    window.addEventListener('drop', (e) => {
+      if (!document.getElementById('canvas-view')) return;
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        let dropOffsetCount = 0;
+        Array.from(e.dataTransfer.files).forEach((file) => {
+          if (file.type.indexOf('image') !== -1) {
+            const reader = new FileReader();
+            const offset = dropOffsetCount * 20;
+            dropOffsetCount++;
+            reader.onload = (event) => {
+              addImageToCanvas(event.target.result, offset);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    });
+    
     eventsAttached = true;
   }
   
@@ -67,10 +95,11 @@ export async function initCanvas() {
   updateTransform();
 }
 
-// Global Cmd+Z for canvas
+// Global keyboard shortcuts for canvas
 window.addEventListener('keydown', async (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-    if (document.getElementById('canvas-view')) {
+  if (document.getElementById('canvas-view')) {
+    // Cmd+Z Undo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
       const batch = undoStack.pop();
       if (batch && batch.length > 0) {
         for (const lastId of batch) {
@@ -80,11 +109,36 @@ window.addEventListener('keydown', async (e) => {
         }
       }
     }
+    
+    // Delete/Backspace to remove selected image
+    if ((e.key === 'Backspace' || e.key === 'Delete') && activeCanvasItem) {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+      const { id, el } = activeCanvasItem;
+      await deleteImage(id);
+      if (el) el.remove();
+      activeCanvasItem = null;
+    }
+    
+    // Enter to confirm resize
+    if (e.key === 'Enter') {
+      const resizingItems = document.querySelectorAll('.canvas-item.resize-mode');
+      resizingItems.forEach(el => {
+        el.classList.remove('resize-mode');
+        const btn = el.querySelector('.confirm-resize-btn');
+        if (btn) btn.style.display = 'none';
+      });
+    }
   }
 });
 
 function onPointerDown(e) {
   if (e.target !== view) return;
+  
+  if (activeCanvasItem && activeCanvasItem.el) {
+    activeCanvasItem.el.classList.remove('selected');
+  }
+  activeCanvasItem = null;
+  
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
   if (activePointers.size === 1) {
@@ -411,6 +465,12 @@ function renderImage(imgData) {
   el.addEventListener('pointerdown', (e) => {
     // Let our custom resize handle deal with it, do NOT block it
     if (e.target === handle || e.target === input || e.target === menuBtn || menu.contains(e.target) || e.target === btnConfirmResize) return;
+
+    if (activeCanvasItem && activeCanvasItem.el) {
+      activeCanvasItem.el.classList.remove('selected');
+    }
+    activeCanvasItem = { id: imgData.id, el: el };
+    el.classList.add('selected');
 
     e.stopPropagation(); // Stop canvas from panning
     itemPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });

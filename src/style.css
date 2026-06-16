@@ -234,6 +234,11 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.canvas-item.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
 .canvas-item.resize-mode {
   border: 2px dashed #000;
   box-shadow: 0 0 0 4px rgba(0,0,0,0.1);
