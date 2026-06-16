@@ -140,15 +140,18 @@ function handleFile(file) {
 async function processImage() {
   if (!currentFile) return;
 
-  showLoader('Downloading AI model & processing image... (This may take a moment on first run)');
+  showLoader('Erasing your image... this may take a moment.');
   document.getElementById('btn-erase').disabled = true;
+
+  // iOS strict memory limit workaround: use 'small' on iOS, 'medium' everywhere else
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const selectedModel = isIOS ? 'small' : 'medium';
 
   try {
     const imageBlob = await removeBackground(currentFile, {
-      model: 'small', // Use small model to prevent iOS OOM crashes
+      model: selectedModel,
       progress: (key, current, total) => {
-        // Optional: could update a progress bar here
-        console.log(`Downloading model: ${key} ${current}/${total}`);
+        // Silent progress
       }
     });
 

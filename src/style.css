@@ -555,7 +555,8 @@ body {
   }
   
   .glass-nav.liquid-glass {
-    width: 90%;
+    width: max-content;
+    max-width: 95%;
     padding: 0.25rem;
     top: 1rem;
   }
