@@ -364,7 +364,9 @@ body {
   justify-content: flex-start;
   padding-top: 8rem;
   padding-bottom: 4rem;
+  height: 100vh;
   min-height: 100vh;
+  overflow-y: auto;
   box-sizing: border-box;
   gap: 2rem;
   background: #ffffff;
