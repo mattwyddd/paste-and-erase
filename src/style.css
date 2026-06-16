@@ -27,6 +27,20 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* Text Logo */
+.text-logo {
+  position: fixed;
+  top: 1.75rem;
+  left: 2rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: #000;
+  z-index: 1000;
+  text-transform: lowercase;
+}
+
 /* Glassmorphism Navigation (Matches Godly) */
 .glass-nav.liquid-glass {
   position: fixed;
@@ -309,6 +323,33 @@ body {
   justify-content: center;
   gap: 2rem;
   background: #ffffff;
+}
+
+/* Floating Action Button (FAB) */
+.fab-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 900;
+}
+
+.fab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: #000;
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
+}
+
+.fab-btn:hover {
+  transform: scale(1.1);
+  background: #333;
 }
 
 .upload-area {

@@ -29,6 +29,21 @@ export async function initCanvas() {
     eventsAttached = true;
   }
   
+  // Attach Canvas Upload Listener
+  const canvasUpload = document.getElementById('canvas-upload');
+  if (canvasUpload) {
+    canvasUpload.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          addImageToCanvas(event.target.result);
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+      e.target.value = ''; // Reset input
+    });
+  }
+
   // Expose function for eraser
   window.addImageToCanvas = addImageToCanvas;
   
