@@ -282,24 +282,60 @@ function renderImage(imgData) {
     await updateImage(imgData.id, { w: imgData.w, h: imgData.h });
   };
 
-  // Dragging the item itself
+  // Dragging or Resizing the item itself
+  const itemPointers = new Map();
   let isDraggingItem = false;
+  let isResizingItem = false;
   let itemStartX, itemStartY;
+  let initialItemDist = null;
+  let initialItemW = 0, initialItemH = 0;
   
   const onCardMove = (e) => {
-    if (!isDraggingItem) return;
-    imgData.x = e.clientX - itemStartX;
-    imgData.y = e.clientY - itemStartY;
-    el.style.left = `${imgData.x - 180}px`;
-    el.style.top = `${imgData.y - 112.5}px`;
+    if (!itemPointers.has(e.pointerId)) return;
+    itemPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (itemPointers.size === 1 && isDraggingItem) {
+      imgData.x = e.clientX - itemStartX;
+      imgData.y = e.clientY - itemStartY;
+      el.style.left = `${imgData.x - 180}px`;
+      el.style.top = `${imgData.y - 112.5}px`;
+    } else if (itemPointers.size === 2 && isResizingItem) {
+      const pts = Array.from(itemPointers.values());
+      const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (initialItemDist && currentDist > 0) {
+        const scale = currentDist / initialItemDist;
+        imgData.w = Math.max(150, initialItemW * scale);
+        imgData.h = Math.max(100, initialItemH * scale);
+        el.style.width = `${imgData.w}px`;
+        el.style.height = `${imgData.h}px`;
+      }
+    }
   };
 
-  const onCardUp = async () => {
-    if (isDraggingItem) {
-      isDraggingItem = false;
-      await updateImage(imgData.id, { x: imgData.x, y: imgData.y });
+  const onCardUp = async (e) => {
+    itemPointers.delete(e.pointerId);
+    if (itemPointers.size < 2) {
+      initialItemDist = null;
+      if (isResizingItem) {
+        isResizingItem = false;
+        // Save the new size automatically
+        await updateImage(imgData.id, { w: imgData.w, h: imgData.h });
+      }
+    }
+    if (itemPointers.size === 1) {
+      // Resume dragging with the remaining finger
+      const p = Array.from(itemPointers.values())[0];
+      itemStartX = p.x - imgData.x;
+      itemStartY = p.y - imgData.y;
+      isDraggingItem = true;
+    } else if (itemPointers.size === 0) {
+      if (isDraggingItem) {
+        isDraggingItem = false;
+        await updateImage(imgData.id, { x: imgData.x, y: imgData.y });
+      }
       window.removeEventListener('pointermove', onCardMove);
       window.removeEventListener('pointerup', onCardUp);
+      window.removeEventListener('pointercancel', onCardUp);
     }
   };
 
@@ -312,13 +348,25 @@ function renderImage(imgData) {
       return; // Let native CSS resize happen
     }
 
-    isDraggingItem = true;
-    itemStartX = e.clientX - imgData.x;
-    itemStartY = e.clientY - imgData.y;
     e.stopPropagation(); // Stop canvas from panning
-    
-    window.addEventListener('pointermove', onCardMove);
-    window.addEventListener('pointerup', onCardUp);
+    itemPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (itemPointers.size === 1) {
+      isDraggingItem = true;
+      itemStartX = e.clientX - imgData.x;
+      itemStartY = e.clientY - imgData.y;
+      
+      window.addEventListener('pointermove', onCardMove);
+      window.addEventListener('pointerup', onCardUp);
+      window.addEventListener('pointercancel', onCardUp);
+    } else if (itemPointers.size === 2) {
+      isDraggingItem = false;
+      isResizingItem = true;
+      const pts = Array.from(itemPointers.values());
+      initialItemDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      initialItemW = el.offsetWidth;
+      initialItemH = el.offsetHeight;
+    }
   });
 
   inner.appendChild(img);
