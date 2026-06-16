@@ -56,7 +56,7 @@ export function initEraser() {
       // If we are on eraser tab, and the tool is visible
       if (eraserView && wip && wip.style.display === 'none') {
         const btnClear = document.getElementById('btn-clear');
-        if (btnClear && btnClear.style.display !== 'none') {
+        if (btnClear && !btnClear.disabled) {
           btnClear.click();
         }
       }
@@ -109,10 +109,10 @@ export function initEraser() {
     document.getElementById('img-original').style.display = 'none';
     document.getElementById('img-result').style.display = 'none';
     document.getElementById('btn-erase').disabled = true;
-    btnSend.style.display = 'none';
-    btnCopy.style.display = 'none';
-    btnDownload.style.display = 'none';
-    btnClear.style.display = 'none';
+    btnSend.disabled = true;
+    btnCopy.disabled = true;
+    btnDownload.disabled = true;
+    btnClear.disabled = true;
     fileInput.value = ''; // Reset file input
   });
 }
@@ -145,10 +145,10 @@ function handleFile(file) {
     
     // Reset result
     document.getElementById('img-result').style.display = 'none';
-    document.getElementById('btn-send-to-canvas').style.display = 'none';
-    document.getElementById('btn-copy').style.display = 'none';
-    document.getElementById('btn-download').style.display = 'none';
-    document.getElementById('btn-clear').style.display = 'inline-block';
+    document.getElementById('btn-send-to-canvas').disabled = true;
+    document.getElementById('btn-copy').disabled = true;
+    document.getElementById('btn-download').disabled = true;
+    document.getElementById('btn-clear').disabled = false;
     
     // Enable erase button
     document.getElementById('btn-erase').disabled = false;
@@ -181,9 +181,9 @@ async function processImage() {
       imgResult.src = resultDataURL;
       imgResult.style.display = 'block';
       
-      document.getElementById('btn-send-to-canvas').style.display = 'inline-block';
-      document.getElementById('btn-copy').style.display = 'inline-block';
-      document.getElementById('btn-download').style.display = 'inline-block';
+      document.getElementById('btn-send-to-canvas').disabled = false;
+      document.getElementById('btn-copy').disabled = false;
+      document.getElementById('btn-download').disabled = false;
     };
     reader.readAsDataURL(imageBlob);
 

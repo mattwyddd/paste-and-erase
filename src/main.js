@@ -77,10 +77,10 @@ function getEraserHTML() {
         </div>
         <div class="eraser-actions">
           <button class="btn-primary" id="btn-erase" disabled>Erase Background</button>
-          <button class="btn-primary" id="btn-send-to-canvas" style="display: none;">Send to Canvas</button>
-          <button class="btn-primary" id="btn-copy" style="display: none;">Copy Image</button>
-          <button class="btn-primary" id="btn-download" style="display: none;">Download</button>
-          <button class="btn-secondary" id="btn-clear" style="display: none;">Clear</button>
+          <button class="btn-primary" id="btn-send-to-canvas" disabled>Send to Canvas</button>
+          <button class="btn-primary" id="btn-copy" disabled>Copy Image</button>
+          <button class="btn-primary" id="btn-download" disabled>Download</button>
+          <button class="btn-secondary" id="btn-clear" disabled>Clear</button>
         </div>
       </div>
     </div>
