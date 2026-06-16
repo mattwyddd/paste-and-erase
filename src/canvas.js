@@ -183,12 +183,17 @@ function renderImage(imgData) {
   const el = document.createElement('div');
   el.className = 'canvas-item';
   el.dataset.id = imgData.id;
-  // Center the image around its x,y coords. Adjust for the 360x225 size.
-  el.style.left = `${imgData.x - 180}px`;
-  el.style.top = `${imgData.y - 112.5}px`;
+  imgData.w = imgData.w || 360;
+  imgData.h = imgData.h || 225;
+  
+  el.style.width = `${imgData.w}px`;
+  el.style.height = `${imgData.h}px`;
 
-  if (imgData.w) el.style.width = `${imgData.w}px`;
-  if (imgData.h) el.style.height = `${imgData.h}px`;
+  const updatePosition = () => {
+    el.style.left = `${imgData.x - imgData.w / 2}px`;
+    el.style.top = `${imgData.y - imgData.h / 2}px`;
+  };
+  updatePosition();
 
   // Inner wrapper for hover effect matching Godly
   const inner = document.createElement('div');
@@ -279,7 +284,8 @@ function renderImage(imgData) {
     btnConfirmResize.style.display = 'none';
     imgData.w = el.offsetWidth;
     imgData.h = el.offsetHeight;
-    await updateImage(imgData.id, { w: imgData.w, h: imgData.h });
+    updatePosition();
+    await updateImage(imgData.id, { w: imgData.w, h: imgData.h, x: imgData.x, y: imgData.y });
   };
 
   // Dragging or Resizing the item itself
@@ -297,8 +303,7 @@ function renderImage(imgData) {
     if (itemPointers.size === 1 && isDraggingItem) {
       imgData.x = e.clientX - itemStartX;
       imgData.y = e.clientY - itemStartY;
-      el.style.left = `${imgData.x - 180}px`;
-      el.style.top = `${imgData.y - 112.5}px`;
+      updatePosition();
     } else if (itemPointers.size === 2 && isResizingItem) {
       const pts = Array.from(itemPointers.values());
       const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
@@ -308,6 +313,7 @@ function renderImage(imgData) {
         imgData.h = Math.max(100, initialItemH * scale);
         el.style.width = `${imgData.w}px`;
         el.style.height = `${imgData.h}px`;
+        updatePosition(); // Keep image perfectly centered under fingers
       }
     }
   };

@@ -21,7 +21,7 @@ async function init() {
   
   // Initialize slider position
   setTimeout(updateSlider, 100);
-  window.addEventListener('resize', updateSlider);
+  window.addEventListener('resize', () => requestAnimationFrame(updateSlider));
 }
 
 function updateSlider() {
@@ -30,9 +30,11 @@ function updateSlider() {
   const navLinks = document.getElementById('nav-links');
   
   if (slider && activeBtn && navLinks) {
-    slider.style.width = `${activeBtn.offsetWidth}px`;
-    // calculate offset relative to nav-links container
-    slider.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    const w = activeBtn.offsetWidth;
+    if (w > 0) {
+      slider.style.width = `${w}px`;
+      slider.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    }
   }
 }
 
