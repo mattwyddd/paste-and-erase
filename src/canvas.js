@@ -1,6 +1,8 @@
 import { saveImage, getAllImages, deleteImage, updateImage } from './storage.js';
 
 let undoStack = [];
+let currentPasteBatch = [];
+let pasteTimeout = null;
 
 let container;
 let view;
@@ -68,13 +70,14 @@ export async function initCanvas() {
 // Global Cmd+Z for canvas
 window.addEventListener('keydown', async (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-    const activeBtn = document.querySelector('.nav-btn.active');
-    if (activeBtn && activeBtn.innerText.toLowerCase().includes('ideas gallery')) {
-      const lastId = undoStack.pop();
-      if (lastId) {
-        await deleteImage(lastId);
-        const el = document.querySelector(`.canvas-item[data-id="${lastId}"]`);
-        if (el) el.remove();
+    if (document.getElementById('canvas-view')) {
+      const batch = undoStack.pop();
+      if (batch && batch.length > 0) {
+        for (const lastId of batch) {
+          await deleteImage(lastId);
+          const el = document.querySelector(`.canvas-item[data-id="${lastId}"]`);
+          if (el) el.remove();
+        }
       }
     }
   }
@@ -488,5 +491,13 @@ async function addImageToCanvas(dataURL, offset = 0) {
   };
 
   await saveImage(newImg);
+  
+  currentPasteBatch.push(id);
+  clearTimeout(pasteTimeout);
+  pasteTimeout = setTimeout(() => {
+    undoStack.push([...currentPasteBatch]);
+    currentPasteBatch = [];
+  }, 100);
+  
   renderImage(newImg);
 }
