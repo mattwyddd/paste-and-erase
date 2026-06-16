@@ -1,5 +1,7 @@
 import { saveImage, getAllImages, deleteImage, updateImage } from './storage.js';
 
+let undoStack = [];
+
 let container;
 let view;
 let isDragging = false;
@@ -59,6 +61,21 @@ export async function initCanvas() {
   // Set initial transform
   updateTransform();
 }
+
+// Global Cmd+Z for canvas
+window.addEventListener('keydown', async (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    const activeBtn = document.querySelector('.nav-btn.active');
+    if (activeBtn && activeBtn.innerText.toLowerCase().includes('ideas gallery')) {
+      const lastId = undoStack.pop();
+      if (lastId) {
+        await deleteImage(lastId);
+        const el = document.querySelector(`.canvas-item[data-id="${lastId}"]`);
+        if (el) el.remove();
+      }
+    }
+  }
+});
 
 function onPointerDown(e) {
   if (e.target !== view) return;
@@ -195,6 +212,50 @@ function renderImage(imgData) {
   };
   updatePosition();
 
+  // Custom Resize Handle logic
+  const handle = document.createElement('div');
+  handle.className = 'resize-handle';
+  
+  let isMouseResizing = false;
+  let startMouseW, startMouseH, startMouseX, startMouseY;
+  
+  const onMouseResizeMove = (e) => {
+    if (!isMouseResizing) return;
+    const dx = e.clientX - startMouseX;
+    const dy = e.clientY - startMouseY;
+    
+    // Scale symmetrically (multiply delta by 2 since center is anchored)
+    imgData.w = Math.max(150, startMouseW + dx * 2);
+    imgData.h = Math.max(100, startMouseH + dy * 2);
+    
+    el.style.width = `${imgData.w}px`;
+    el.style.height = `${imgData.h}px`;
+    updatePosition();
+  };
+  
+  const onMouseResizeUp = async () => {
+    if (isMouseResizing) {
+      isMouseResizing = false;
+      window.removeEventListener('pointermove', onMouseResizeMove);
+      window.removeEventListener('pointerup', onMouseResizeUp);
+      await updateImage(imgData.id, { w: imgData.w, h: imgData.h });
+    }
+  };
+  
+  handle.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    isMouseResizing = true;
+    startMouseW = imgData.w;
+    startMouseH = imgData.h;
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
+    
+    window.addEventListener('pointermove', onMouseResizeMove);
+    window.addEventListener('pointerup', onMouseResizeUp);
+  });
+  
+  el.appendChild(handle);
+
   // Inner wrapper for hover effect matching Godly
   const inner = document.createElement('div');
   inner.className = 'canvas-item-inner';
@@ -282,10 +343,6 @@ function renderImage(imgData) {
     e.stopPropagation();
     el.classList.remove('resize-mode');
     btnConfirmResize.style.display = 'none';
-    imgData.w = el.offsetWidth;
-    imgData.h = el.offsetHeight;
-    updatePosition();
-    await updateImage(imgData.id, { w: imgData.w, h: imgData.h, x: imgData.x, y: imgData.y });
   };
 
   // Dragging or Resizing the item itself
@@ -346,13 +403,8 @@ function renderImage(imgData) {
   };
 
   el.addEventListener('pointerdown', (e) => {
-    if (e.target === input || e.target === menuBtn || menu.contains(e.target) || e.target === btnConfirmResize) return;
-    
-    // Check if clicking near bottom right for resize handle (within 20px)
-    const rect = el.getBoundingClientRect();
-    if (el.classList.contains('resize-mode') && e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) {
-      return; // Let native CSS resize happen
-    }
+    // Let our custom resize handle deal with it, do NOT block it
+    if (e.target === handle || e.target === input || e.target === menuBtn || menu.contains(e.target) || e.target === btnConfirmResize) return;
 
     e.stopPropagation(); // Stop canvas from panning
     itemPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });

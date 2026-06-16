@@ -46,6 +46,22 @@ export function initEraser() {
 
   // Easter egg
   window.addEventListener('keydown', handleEasterEgg);
+  
+  // Eraser Undo
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      const eraserView = document.getElementById('eraser-view');
+      const wip = document.getElementById('wip-container');
+      
+      // If we are on eraser tab, and the tool is visible
+      if (eraserView && wip && wip.style.display === 'none') {
+        const btnClear = document.getElementById('btn-clear');
+        if (btnClear && btnClear.style.display !== 'none') {
+          btnClear.click();
+        }
+      }
+    }
+  });
 
   // Paste support in eraser page
   window.addEventListener('paste', handleEraserPaste);
