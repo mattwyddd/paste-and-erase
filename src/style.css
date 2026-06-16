@@ -134,6 +134,7 @@ body {
   background-size: 40px 40px;
   background-position: center center;
   cursor: grab;
+  touch-action: none; /* Crucial for multi-touch panning/zooming */
 }
 
 #canvas-view:active {
@@ -531,4 +532,56 @@ body {
 @keyframes fade-out {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(1.02); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .text-logo {
+    display: none;
+  }
+  
+  .glass-nav.liquid-glass {
+    width: 90%;
+    padding: 0.25rem;
+    top: 1rem;
+  }
+  
+  .nav-btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  #eraser-view {
+    padding-top: 5rem;
+    padding-bottom: 2rem;
+    height: 100vh;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .upload-area {
+    width: 95%;
+    height: 200px;
+    margin-top: 1rem;
+  }
+
+  .preview-container {
+    flex-direction: column;
+    width: 95%;
+    height: auto;
+    gap: 1rem;
+  }
+
+  .preview-box {
+    height: 300px;
+  }
+
+  .eraser-actions {
+    padding-bottom: 2rem;
+  }
+
+  .fab-container {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
 }

@@ -2,9 +2,17 @@ import { saveImage, getAllImages, deleteImage, updateImage } from './storage.js'
 
 let container;
 let view;
-let isPanning = false;
+let isDragging = false;
 let startX = 0, startY = 0;
 let panX = 0, panY = 0;
+let zoomScale = 1;
+
+// Multi-touch variables
+const activePointers = new Map();
+let initialDistance = null;
+let initialScale = 1;
+let initialPanX = 0, initialPanY = 0;
+let initialPinchCenter = { x: 0, y: 0 };
 
 let eventsAttached = false;
 
@@ -24,6 +32,7 @@ export async function initCanvas() {
   if (!eventsAttached) {
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('paste', handlePaste);
     eventsAttached = true;
@@ -52,30 +61,105 @@ export async function initCanvas() {
 }
 
 function onPointerDown(e) {
-  if (e.target.closest('.canvas-item')) return; // Ignore if clicking an item (unless we add dragging items later)
-  if (e.button !== 0) return; // Only left click
-  isPanning = true;
-  startX = e.clientX - panX;
-  startY = e.clientY - panY;
-  view.style.cursor = 'grabbing';
+  if (e.target !== view) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 1) {
+    isDragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    view.style.cursor = 'grabbing';
+  } else if (activePointers.size === 2) {
+    isDragging = false; // Stop panning when pinching starts
+    const pts = Array.from(activePointers.values());
+    initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    initialScale = zoomScale;
+    initialPinchCenter = {
+      x: (pts[0].x + pts[1].x) / 2,
+      y: (pts[0].y + pts[1].y) / 2
+    };
+    initialPanX = panX;
+    initialPanY = panY;
+  }
 }
 
 function onPointerMove(e) {
-  if (!isPanning) return;
-  panX = e.clientX - startX;
-  panY = e.clientY - startY;
-  updateTransform();
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 1 && isDragging) {
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateTransform();
+  } else if (activePointers.size === 2) {
+    const pts = Array.from(activePointers.values());
+    const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    
+    if (initialDistance && currentDist > 0) {
+      const newScale = Math.min(Math.max(0.1, initialScale * (currentDist / initialDistance)), 5);
+      
+      const currentCenter = {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2
+      };
+
+      const rect = view.getBoundingClientRect();
+      const centerX = initialPinchCenter.x - rect.left;
+      const centerY = initialPinchCenter.y - rect.top;
+
+      const dx = (centerX - rect.width / 2) - initialPanX;
+      const dy = (centerY - rect.height / 2) - initialPanY;
+
+      // Calculate new pan to keep the pinch center anchored
+      panX = initialPanX - dx * (newScale / initialScale - 1) + (currentCenter.x - initialPinchCenter.x);
+      panY = initialPanY - dy * (newScale / initialScale - 1) + (currentCenter.y - initialPinchCenter.y);
+      
+      zoomScale = newScale;
+      updateTransform();
+    }
+  }
 }
 
 function onPointerUp(e) {
-  isPanning = false;
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) {
+    initialDistance = null;
+  }
+  if (activePointers.size === 1) {
+    // Resume panning with the remaining finger
+    const p = Array.from(activePointers.values())[0];
+    startX = p.x - panX;
+    startY = p.y - panY;
+    isDragging = true;
+  } else if (activePointers.size === 0) {
+    isDragging = false;
+  }
   view.style.cursor = 'grab';
 }
 
 function onWheel(e) {
   if (e.ctrlKey) {
-    // Zoom handling could go here
     e.preventDefault();
+    const zoomFactor = 1 - Math.sign(e.deltaY) * 0.1;
+    const newScale = Math.min(Math.max(0.1, zoomScale * zoomFactor), 5);
+
+    const rect = view.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Viewport center
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Calculate dx and dy from the center, then adjust pan
+    const dx = (mouseX - centerX) - panX;
+    const dy = (mouseY - centerY) - panY;
+
+    panX -= dx * (newScale / zoomScale - 1);
+    panY -= dy * (newScale / zoomScale - 1);
+
+    zoomScale = newScale;
+    updateTransform();
   } else {
     // Scroll to pan
     panX -= e.deltaX;
@@ -86,10 +170,12 @@ function onWheel(e) {
 
 function updateTransform() {
   if (container) {
-    container.style.transform = `translate3d(${panX}px, ${panY}px, 0)`;
+    container.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoomScale})`;
   }
   if (view) {
-    view.style.backgroundPosition = `${panX}px ${panY}px`;
+    view.style.backgroundPosition = `calc(50% + ${panX}px) calc(50% + ${panY}px)`;
+    const bgSize = 40 * zoomScale;
+    view.style.backgroundSize = `${bgSize}px ${bgSize}px`;
   }
 }
 

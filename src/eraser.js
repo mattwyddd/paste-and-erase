@@ -145,7 +145,7 @@ async function processImage() {
 
   try {
     const imageBlob = await removeBackground(currentFile, {
-      model: 'medium', // Higher precision model
+      model: 'small', // Use small model to prevent iOS OOM crashes
       progress: (key, current, total) => {
         // Optional: could update a progress bar here
         console.log(`Downloading model: ${key} ${current}/${total}`);
