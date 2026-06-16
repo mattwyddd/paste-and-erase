@@ -41,6 +41,20 @@ body {
   text-transform: lowercase;
 }
 
+/* Live Clock */
+.live-clock {
+  position: fixed;
+  top: 1.75rem;
+  right: 2rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: #000;
+  z-index: 1000;
+  text-transform: lowercase;
+}
+
 /* Glassmorphism Navigation (Matches Godly) */
 .glass-nav.liquid-glass {
   position: fixed;
@@ -536,7 +550,7 @@ body {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-  .text-logo {
+  .text-logo, .live-clock {
     display: none;
   }
   
