@@ -44,12 +44,15 @@ export async function initCanvas() {
   const canvasUpload = document.getElementById('canvas-upload');
   if (canvasUpload) {
     canvasUpload.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          addImageToCanvas(event.target.result);
-        };
-        reader.readAsDataURL(e.target.files[0]);
+      if (e.target.files && e.target.files.length > 0) {
+        Array.from(e.target.files).forEach((file, index) => {
+          const reader = new FileReader();
+          const offset = index * 20;
+          reader.onload = (event) => {
+            addImageToCanvas(event.target.result, offset);
+          };
+          reader.readAsDataURL(file);
+        });
       }
       e.target.value = ''; // Reset input
     });
@@ -454,25 +457,27 @@ async function handlePaste(e) {
   if (!document.getElementById('canvas-view')) return;
 
   const items = e.clipboardData.items;
+  let pasteOffsetCount = 0;
   for (let i = 0; i < items.length; i++) {
     if (items[i].type.indexOf('image') !== -1) {
       const blob = items[i].getAsFile();
       const reader = new FileReader();
+      const offset = pasteOffsetCount * 20;
+      pasteOffsetCount++;
       reader.onload = (event) => {
-        addImageToCanvas(event.target.result);
+        addImageToCanvas(event.target.result, offset);
       };
       reader.readAsDataURL(blob);
-      break; // Only process the first image
     }
   }
 }
 
-async function addImageToCanvas(dataURL) {
+async function addImageToCanvas(dataURL, offset = 0) {
   const id = crypto.randomUUID();
   // The canvas-container is already centered at 50% 50%.
-  // To paste in the visual center, we just offset by the current pan.
-  const x = -panX;
-  const y = -panY;
+  // To paste in the visual center, we just offset by the current pan, plus any cascading offset for multiple images
+  const x = -panX + offset;
+  const y = -panY + offset;
   
   const newImg = {
     id,
