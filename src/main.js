@@ -55,9 +55,33 @@ function getCanvasHTML() {
 function getEraserHTML() {
   return `
     <div id="eraser-view" class="view active">
-      <div class="wip-container">
+      <div id="wip-container" class="wip-container">
         <h1 class="wip-title">WIP</h1>
         <p class="wip-subtitle">SORRY!</p>
+      </div>
+      <div id="eraser-tool-container" style="display: none; flex-direction: column; align-items: center; width: 100%; gap: 2rem;">
+        <div class="upload-area" id="eraser-dropzone">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-plus" style="color: var(--accent);"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><line x1="16" x2="22" y1="5" y2="5"/><line x1="19" x2="19" y1="2" y2="8"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <div class="upload-text">Drag & drop or click to upload photo</div>
+          <input type="file" id="eraser-file-input" accept="image/*" />
+        </div>
+        <div class="preview-container">
+          <div class="preview-box" id="preview-original">
+            <div class="preview-label">Original</div>
+            <img id="img-original" style="display: none;" />
+          </div>
+          <div class="preview-box" id="preview-result">
+            <div class="preview-label">Result</div>
+            <img id="img-result" style="display: none;" />
+          </div>
+        </div>
+        <div class="eraser-actions">
+          <button class="btn-primary" id="btn-erase" disabled>Erase Background</button>
+          <button class="btn-primary" id="btn-send-to-canvas" style="display: none;">Send to Canvas</button>
+          <button class="btn-primary" id="btn-copy" style="display: none;">Copy Image</button>
+          <button class="btn-primary" id="btn-download" style="display: none;">Download</button>
+          <button class="btn-secondary" id="btn-clear" style="display: none;">Clear</button>
+        </div>
       </div>
     </div>
   `;
