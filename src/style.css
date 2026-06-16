@@ -519,6 +519,33 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* WIP View */
+.wip-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  color: #000;
+  text-align: center;
+}
+
+.wip-title {
+  font-size: 8rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin: 0;
+  line-height: 1;
+}
+
+.wip-subtitle {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
