@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Paste & Erase - A personal infinite canvas for your ideas" />
+    <title>Paste & Erase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Top Navigation -->
+    <nav class="glass-nav liquid-glass">
+      <div class="nav-links" id="nav-links">
+        <div class="nav-slider" id="nav-slider"></div>
+        <button id="nav-canvas" class="nav-btn active">Ideas Gallery</button>
+        <button id="nav-eraser" class="nav-btn">Background Eraser</button>
+      </div>
+    </nav>
+
+    <!-- Main Views -->
+    <main id="app-content">
+      <!-- Views will be injected here by main.js -->
+    </main>
+
+    <!-- Global Progress / Loading overlay -->
+    <div id="global-loader" class="hidden">
+      <div class="loader-spinner"></div>
+      <p id="loader-text">Loading...</p>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
