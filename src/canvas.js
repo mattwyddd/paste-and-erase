@@ -245,9 +245,14 @@ function onWheel(e) {
   }
 }
 
+let isTransformPending = false;
 function updateTransform() {
-  if (container) {
-    container.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoomScale})`;
+  if (!isTransformPending && container) {
+    isTransformPending = true;
+    requestAnimationFrame(() => {
+      container.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoomScale})`;
+      isTransformPending = false;
+    });
   }
   if (view) {
     view.style.backgroundPosition = `calc(50% + ${panX}px) calc(50% + ${panY}px)`;
@@ -321,6 +326,8 @@ function renderImage(imgData) {
   inner.className = 'canvas-item-inner';
 
   const img = document.createElement('img');
+  img.decoding = 'async';
+  img.loading = 'lazy';
   img.src = imgData.dataURL;
 
   const input = document.createElement('input');
