@@ -142,7 +142,7 @@ function updateClock() {
   const clockEl = document.getElementById('live-clock');
   if (!clockEl) return;
   const now = new Date();
-  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateString = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
   clockEl.textContent = `${dateString} - ${timeString}`;
 }
